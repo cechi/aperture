@@ -5,21 +5,40 @@
 }
 
 :root {
-  --aperture-blue: #5cb8ff;
-  --aperture-orange: #ff8c00;
-  --aperture-dark: #0a0a0f;
-  --aperture-grid: #1a1a2e;
-  --text-primary: #d0d8e8;
-  --text-dim: #6a7a8a;
+  --matrix-green: #00ff41;
+  --matrix-green-bright: #39ff14;
+  --matrix-green-dim: #006600;
+  --matrix-green-dark: #003b00;
+  --matrix-bg: #000000;
+  --matrix-bg-alt: #0d2600;
+  --matrix-error: #ff0040;
+  --text-primary: #00ff41;
+  --text-dim: #006600;
 }
 
 body {
-  background: var(--aperture-dark);
+  background: var(--matrix-bg);
   color: var(--text-primary);
   font-family: 'Courier New', 'Consolas', monospace;
   overflow: hidden;
   height: 100vh;
   width: 100vw;
+}
+
+/* Scanline overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
 }
 
 #app {
@@ -75,11 +94,11 @@ body {
   transition: background 0.3s;
 }
 
-#status-icon.connected { background: var(--aperture-blue); }
-#status-icon.speaking { background: var(--aperture-orange); animation: pulse-dot 0.6s ease-in-out infinite; }
-#status-icon.thinking { background: var(--aperture-blue); animation: pulse-dot 1s ease-in-out infinite; }
-#status-icon.transcribing { background: #aaa; animation: pulse-dot 0.8s ease-in-out infinite; }
-#status-icon.error { background: #ff4444; }
+#status-icon.connected { background: var(--matrix-green); }
+#status-icon.speaking { background: var(--matrix-green-bright); animation: pulse-dot 0.6s ease-in-out infinite; }
+#status-icon.thinking { background: var(--matrix-green); animation: pulse-dot 1s ease-in-out infinite; }
+#status-icon.transcribing { background: var(--matrix-green-dim); animation: pulse-dot 0.8s ease-in-out infinite; }
+#status-icon.error { background: var(--matrix-error); }
 
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
@@ -117,23 +136,23 @@ body {
 
 .msg.user {
   align-self: flex-end;
-  background: rgba(92, 184, 255, 0.1);
-  border: 1px solid rgba(92, 184, 255, 0.2);
-  color: var(--aperture-blue);
+  background: rgba(0, 102, 0, 0.15);
+  border: 1px solid rgba(0, 102, 0, 0.3);
+  color: var(--matrix-green-dim);
 }
 
 .msg.assistant {
   align-self: flex-start;
-  background: rgba(255, 140, 0, 0.08);
-  border: 1px solid rgba(255, 140, 0, 0.15);
-  color: var(--text-primary);
+  background: rgba(0, 255, 65, 0.06);
+  border: 1px solid rgba(0, 255, 65, 0.15);
+  color: var(--matrix-green);
 }
 
 .msg.error {
   align-self: center;
-  background: rgba(255, 68, 68, 0.1);
-  border: 1px solid rgba(255, 68, 68, 0.2);
-  color: #ff6666;
+  background: rgba(255, 0, 64, 0.1);
+  border: 1px solid rgba(255, 0, 64, 0.2);
+  color: var(--matrix-error);
   font-size: 12px;
 }
 
@@ -154,9 +173,9 @@ body {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  border: 2px solid rgba(92, 184, 255, 0.3);
-  background: rgba(92, 184, 255, 0.05);
-  color: var(--aperture-blue);
+  border: 2px solid rgba(0, 255, 65, 0.3);
+  background: rgba(0, 255, 65, 0.05);
+  color: var(--matrix-green);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -166,8 +185,9 @@ body {
 }
 
 #btn-mic:hover:not(:disabled) {
-  background: rgba(92, 184, 255, 0.15);
-  border-color: var(--aperture-blue);
+  background: rgba(0, 255, 65, 0.15);
+  border-color: var(--matrix-green);
+  box-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
 }
 
 #btn-mic:disabled {
@@ -176,30 +196,31 @@ body {
 }
 
 #btn-mic.recording {
-  border-color: var(--aperture-orange);
-  background: rgba(255, 140, 0, 0.15);
-  color: var(--aperture-orange);
+  border-color: var(--matrix-green-bright);
+  background: rgba(57, 255, 20, 0.15);
+  color: var(--matrix-green-bright);
   animation: pulse-mic 1s ease-in-out infinite;
 }
 
 @keyframes pulse-mic {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 140, 0, 0.3); }
-  50% { box-shadow: 0 0 0 12px rgba(255, 140, 0, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.3); }
+  50% { box-shadow: 0 0 0 12px rgba(0, 255, 65, 0); }
 }
 
 #text-input-wrapper {
   flex: 1;
   display: flex;
   align-items: center;
-  border: 1px solid rgba(92, 184, 255, 0.2);
+  border: 1px solid rgba(0, 255, 65, 0.2);
   border-radius: 28px;
-  background: rgba(10, 10, 15, 0.8);
+  background: rgba(0, 0, 0, 0.8);
   padding: 4px 4px 4px 20px;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 #text-input-wrapper:focus-within {
-  border-color: var(--aperture-blue);
+  border-color: var(--matrix-green);
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.2), inset 0 0 10px rgba(0, 255, 65, 0.05);
 }
 
 #text-input {
@@ -207,9 +228,10 @@ body {
   background: none;
   border: none;
   outline: none;
-  color: var(--text-primary);
+  color: var(--matrix-green);
   font-family: inherit;
   font-size: 14px;
+  caret-color: var(--matrix-green);
 }
 
 #text-input::placeholder {
@@ -220,18 +242,20 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: none;
-  background: rgba(92, 184, 255, 0.15);
-  color: var(--aperture-blue);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  background: rgba(0, 255, 65, 0.08);
+  color: var(--matrix-green);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 #btn-send:hover {
-  background: rgba(92, 184, 255, 0.3);
+  background: var(--matrix-green);
+  color: var(--matrix-bg);
+  box-shadow: 0 0 12px rgba(0, 255, 65, 0.4);
 }
 
 /* Scrollbar */
@@ -244,7 +268,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(92, 184, 255, 0.2);
+  background: rgba(0, 255, 65, 0.2);
   border-radius: 2px;
 }
 
@@ -293,10 +317,10 @@ body {
     z-index: 20;
     padding: 12px 16px;
     padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-    background: rgba(10, 10, 15, 0.95);
+    background: rgba(0, 0, 0, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(92, 184, 255, 0.1);
+    border-top: 1px solid rgba(0, 255, 65, 0.1);
   }
 
   /* Reserve space in flex layout so transcript doesn't hide behind fixed controls */

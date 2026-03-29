@@ -1,6 +1,6 @@
 /**
  * GLaDOS Orb — Three.js animated visualization.
- * Pulsating glowing sphere with Aperture Science aesthetics.
+ * Pulsating glowing sphere with Matrix aesthetics.
  */
 const GladosOrb = (() => {
   let scene, camera, renderer;
@@ -13,11 +13,11 @@ const GladosOrb = (() => {
   let targetAmplitude = 0;
   let currentAmplitude = 0;
 
-  // Color targets
-  const COLOR_IDLE = new THREE.Color(0x5cb8ff);
-  const COLOR_SPEAKING = new THREE.Color(0xff8c00);
-  const COLOR_RECORDING = new THREE.Color(0xff4444);
-  const COLOR_THINKING = new THREE.Color(0x8888ff);
+  // Color targets — Matrix green palette
+  const COLOR_IDLE = new THREE.Color(0x003b00);
+  const COLOR_SPEAKING = new THREE.Color(0x39ff14);
+  const COLOR_RECORDING = new THREE.Color(0x00ff41);
+  const COLOR_THINKING = new THREE.Color(0x00aa2a);
   let currentColor = new THREE.Color().copy(COLOR_IDLE);
   let targetColor = new THREE.Color().copy(COLOR_IDLE);
 
@@ -27,7 +27,7 @@ const GladosOrb = (() => {
 
     // Scene
     scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x0a0a0f, 0.08);
+    scene.fog = new THREE.FogExp2(0x000000, 0.08);
 
     // Camera
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
@@ -37,16 +37,16 @@ const GladosOrb = (() => {
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x0a0a0f, 1);
+    renderer.setClearColor(0x000000, 1);
     container.appendChild(renderer.domElement);
 
-    // Grid floor (subtle Aperture aesthetics)
+    // Grid floor
     createGrid();
 
     // Main orb
     const orbGeometry = new THREE.SphereGeometry(1, 64, 64);
     const orbMaterial = new THREE.MeshStandardMaterial({
-      color: 0x1a2a4a,
+      color: 0x001a00,
       emissive: COLOR_IDLE,
       emissiveIntensity: 0.6,
       metalness: 0.3,
@@ -73,7 +73,7 @@ const GladosOrb = (() => {
     pointLight.position.set(0, 0, 0);
     scene.add(pointLight);
 
-    ambientLight = new THREE.AmbientLight(0x111122, 0.5);
+    ambientLight = new THREE.AmbientLight(0x001100, 0.5);
     scene.add(ambientLight);
 
     // Resize handler
@@ -87,7 +87,7 @@ const GladosOrb = (() => {
     const gridSize = 40;
     const gridDivisions = 40;
     const gridMaterial = new THREE.LineBasicMaterial({
-      color: 0x1a1a2e,
+      color: 0x003b00,
       transparent: true,
       opacity: 0.3,
     });
