@@ -55,10 +55,16 @@ function connect() {
     setStatus('error', 'Connection error');
   };
 
-  ws.onmessage = (event) => {
+  ws.onmessage = async (event) => {
     if (event.data instanceof ArrayBuffer) {
       // Binary = TTS audio
       handleAudio(event.data);
+      return;
+    }
+    if (event.data instanceof Blob) {
+      // Blob = TTS audio (server sends Buffer which becomes Blob)
+      const arrayBuffer = await event.data.arrayBuffer();
+      handleAudio(arrayBuffer);
       return;
     }
 
@@ -128,11 +134,10 @@ function handleStatus(status) {
 async function handleAudio(arrayBuffer) {
   GladosOrb.setState('speaking');
 
-  // Start amplitude tracking for orb visualization
-  startAmplitudeTracking();
-
   try {
-    await AudioManager.playAudio(arrayBuffer);
+    const playPromise = AudioManager.playAudio(arrayBuffer);
+    startAmplitudeTracking();
+    await playPromise;
   } catch (err) {
     console.error('Audio playback failed:', err);
     addMessage('error', 'Audio playback failed');
@@ -144,6 +149,7 @@ async function handleAudio(arrayBuffer) {
 }
 
 function startAmplitudeTracking() {
+  stopAmplitudeTracking();
   function track() {
     const amp = AudioManager.getAmplitude();
     GladosOrb.setAmplitude(amp);
