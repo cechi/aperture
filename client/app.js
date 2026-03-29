@@ -107,7 +107,8 @@ function setStatus(state, text) {
   statusText.textContent = text;
 }
 
-function handleStatus(status) {
+function handleStatus(status) { console.log('[status]', status);
+  console.log('[handleStatus]', status);
   switch (status) {
     case 'transcribing':
       setStatus('transcribing', 'Transcribing speech...');
@@ -150,8 +151,10 @@ async function handleAudio(arrayBuffer) {
 
 function startAmplitudeTracking() {
   stopAmplitudeTracking();
+  console.log('[startAmplitudeTracking] started');
   function track() {
     const amp = AudioManager.getAmplitude();
+    if (amp > 0.01) console.log('[track] amp:', amp.toFixed(3));
     GladosOrb.setAmplitude(amp);
     animFrameId = requestAnimationFrame(track);
   }

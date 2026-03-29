@@ -22,7 +22,6 @@ async function handleMessage(ws, session, msg) {
     }
 
     if (!userText || !userText.trim()) {
-      ws.send(JSON.stringify({ type: 'status', status: 'idle' }));
       return;
     }
 
@@ -65,7 +64,6 @@ async function handleMessage(ws, session, msg) {
     ws.send(JSON.stringify({ type: 'tts_error', message: 'Voice synthesis failed. Text response is shown above.' }));
   }
 
-  ws.send(JSON.stringify({ type: 'status', status: 'idle' }));
 }
 
 /**
