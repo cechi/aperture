@@ -145,8 +145,7 @@ async function handleAudio(arrayBuffer) {
   }
 
   stopAmplitudeTracking();
-  GladosOrb.setState('idle');
-  GladosOrb.setAmplitude(0);
+  handleStatus('idle');
 }
 
 function startAmplitudeTracking() {

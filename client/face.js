@@ -23,6 +23,7 @@ let targetColor = new THREE.Color().copy(COLOR_IDLE);
 
 // All mesh materials (updated each frame)
 let meshMaterials = [];
+let wireframeMaterials = [];
 
 function init(containerEl) {
   container = containerEl;
@@ -66,11 +67,38 @@ function init(containerEl) {
           shininess: 100,
           transparent: true,
           opacity: 0.9,
+          polygonOffset: true,
+          polygonOffsetFactor: 1,
+          polygonOffsetUnit: 1,
         });
         child.material = mat;
         meshMaterials.push(mat);
       }
     });
+
+    // Add wireframe overlay for each mesh
+    const solidMeshes = [];
+    model.traverse((child) => {
+      if (child.isMesh) solidMeshes.push(child);
+    });
+    for (const mesh of solidMeshes) {
+      const wireMat = new THREE.MeshBasicMaterial({
+        color: COLOR_IDLE.clone(),
+        wireframe: true,
+        transparent: true,
+        opacity: 0.35,
+      });
+      wireframeMaterials.push(wireMat);
+
+      let wireMesh;
+      if (mesh.isSkinnedMesh) {
+        wireMesh = new THREE.SkinnedMesh(mesh.geometry, wireMat);
+        wireMesh.bind(mesh.skeleton, mesh.bindMatrix);
+      } else {
+        wireMesh = new THREE.Mesh(mesh.geometry, wireMat);
+      }
+      mesh.parent.add(wireMesh);
+    }
 
     // Find chin bone for jaw animation
     model.traverse((child) => {
@@ -79,7 +107,7 @@ function init(containerEl) {
         // Store rest quaternion to animate from
         // Bind pose = open mouth; derive closed by rotating chin upward
         chinBone.userData.openQuaternion = chinBone.quaternion.clone();
-        const closeOffset = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.08, 0, 0));
+        const closeOffset = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.1, 0, 0));
         chinBone.userData.closedQuaternion = chinBone.quaternion.clone().multiply(closeOffset);
         // Start closed immediately
         chinBone.quaternion.copy(chinBone.userData.closedQuaternion);
@@ -92,6 +120,8 @@ function init(containerEl) {
   });
 
   window.addEventListener('resize', onResize);
+  screen.orientation?.addEventListener('change', () => setTimeout(onResize, 100));
+  window.visualViewport?.addEventListener('resize', onResize);
   animate();
 }
 
@@ -122,9 +152,11 @@ function createGrid() {
 }
 
 function onResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  const w = window.visualViewport?.width ?? window.innerWidth;
+  const h = window.visualViewport?.height ?? window.innerHeight;
+  camera.aspect = w / h;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(w, h);
 }
 
 function setState(newState) {
@@ -196,7 +228,7 @@ function animate() {
   if (chinBone && chinBone.userData.closedQuaternion) {
     if (state === 'speaking' && currentAmplitude > 0.05) {
       chinBone.quaternion.copy(chinBone.userData.closedQuaternion)
-        .slerp(chinBone.userData.openQuaternion, Math.min(1, currentAmplitude * 1.5));
+        .slerp(chinBone.userData.openQuaternion, Math.min(1, currentAmplitude * 3));
     } else {
       chinBone.quaternion.slerp(chinBone.userData.closedQuaternion, 0.2);
     }
@@ -208,6 +240,12 @@ function animate() {
   for (const mat of meshMaterials) {
     mat.color.copy(displayColor);
     mat.emissive.copy(emissiveColor);
+  }
+
+  // Wireframe color (brighter than solid to stand out)
+  const wireColor = currentColor.clone().multiplyScalar(intensity * 1.2);
+  for (const mat of wireframeMaterials) {
+    mat.color.copy(wireColor);
   }
 
   // Point light reacts to state

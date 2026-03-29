@@ -21,8 +21,8 @@ body {
   color: var(--text-primary);
   font-family: 'Courier New', 'Consolas', monospace;
   overflow: hidden;
-  height: 100vh;
-  width: 100vw;
+  height: 100dvh;
+  width: 100dvw;
 }
 
 /* Scanline overlay */
