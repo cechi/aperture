@@ -2,236 +2,236 @@
  * Aperture — GLaDOS Voice Interface
  * Main application logic: WebSocket client + UI coordination.
  */
-(() => {
-  // Token gate — redirect to login if missing
-  const token = sessionStorage.getItem('aperture_token');
-  if (!token) {
-    window.location.href = '/login.html';
-    return;
-  }
+import { AudioManager } from './audio.js';
+import { GladosOrb } from './face.js';
 
-  // DOM elements
-  const statusIcon = document.getElementById('status-icon');
-  const statusText = document.getElementById('status-text');
-  const transcriptMessages = document.getElementById('transcript-messages');
-  const btnMic = document.getElementById('btn-mic');
-  const textInput = document.getElementById('text-input');
-  const btnSend = document.getElementById('btn-send');
-  const orbContainer = document.getElementById('orb-container');
+// Token gate — redirect to login if missing
+const token = sessionStorage.getItem('aperture_token');
+if (!token) {
+  window.location.href = '/login.html';
+}
 
-  let ws = null;
-  let connected = false;
-  let pendingAlignment = null;
-  let animFrameId = null;
+// DOM elements
+const statusIcon = document.getElementById('status-icon');
+const statusText = document.getElementById('status-text');
+const transcriptMessages = document.getElementById('transcript-messages');
+const btnMic = document.getElementById('btn-mic');
+const textInput = document.getElementById('text-input');
+const btnSend = document.getElementById('btn-send');
+const orbContainer = document.getElementById('orb-container');
 
-  // Initialize Three.js orb
-  GladosOrb.init(orbContainer);
+let ws = null;
+let connected = false;
+let pendingAlignment = null;
+let animFrameId = null;
 
-  // Connect WebSocket
-  connect();
+// Initialize Three.js face
+GladosOrb.init(orbContainer);
 
-  // --- WebSocket ---
+// Connect WebSocket
+connect();
 
-  function connect() {
-    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    ws = new WebSocket(`${protocol}//${location.host}/?token=${encodeURIComponent(token)}`);
-    ws.binaryType = 'arraybuffer';
+// --- WebSocket ---
 
-    ws.onopen = () => {
-      connected = true;
-      setStatus('connected', 'Connected — Aperture Science GLaDOS Interface');
-      btnMic.disabled = false;
-    };
+function connect() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${protocol}//${location.host}/?token=${encodeURIComponent(token)}`);
+  ws.binaryType = 'arraybuffer';
 
-    ws.onclose = () => {
-      connected = false;
-      btnMic.disabled = true;
-      setStatus('error', 'Disconnected — Reconnecting...');
-      setTimeout(connect, 3000);
-    };
+  ws.onopen = () => {
+    connected = true;
+    setStatus('connected', 'Connected — Aperture Science GLaDOS Interface');
+    btnMic.disabled = false;
+  };
 
-    ws.onerror = () => {
-      setStatus('error', 'Connection error');
-    };
+  ws.onclose = () => {
+    connected = false;
+    btnMic.disabled = true;
+    setStatus('error', 'Disconnected — Reconnecting...');
+    setTimeout(connect, 3000);
+  };
 
-    ws.onmessage = (event) => {
-      if (event.data instanceof ArrayBuffer) {
-        // Binary = TTS audio
-        handleAudio(event.data);
-        return;
-      }
+  ws.onerror = () => {
+    setStatus('error', 'Connection error');
+  };
 
-      const msg = JSON.parse(event.data);
-      switch (msg.type) {
-        case 'ready':
-          setStatus('connected', 'Ready — Awaiting input');
-          break;
-        case 'status':
-          handleStatus(msg.status);
-          break;
-        case 'transcription':
-          addMessage('user', msg.text);
-          break;
-        case 'response':
-          addMessage('assistant', msg.text);
-          break;
-        case 'alignment':
-          pendingAlignment = msg.alignment;
-          break;
-        case 'error':
-        case 'tts_error':
-          addMessage('error', msg.message);
-          handleStatus('idle');
-          break;
-      }
-    };
-  }
-
-  function send(data) {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(data);
+  ws.onmessage = (event) => {
+    if (event.data instanceof ArrayBuffer) {
+      // Binary = TTS audio
+      handleAudio(event.data);
+      return;
     }
-  }
 
-  // --- Status ---
-
-  function setStatus(state, text) {
-    statusIcon.className = state;
-    statusText.textContent = text;
-  }
-
-  function handleStatus(status) {
-    switch (status) {
-      case 'transcribing':
-        setStatus('transcribing', 'Transcribing speech...');
-        GladosOrb.setState('thinking');
-        break;
-      case 'thinking':
-        setStatus('thinking', 'GLaDOS is thinking...');
-        GladosOrb.setState('thinking');
-        break;
-      case 'speaking':
-        setStatus('speaking', 'GLaDOS is speaking...');
-        GladosOrb.setState('speaking');
-        break;
-      case 'idle':
+    const msg = JSON.parse(event.data);
+    switch (msg.type) {
+      case 'ready':
         setStatus('connected', 'Ready — Awaiting input');
-        GladosOrb.setState('idle');
-        GladosOrb.setAmplitude(0);
+        break;
+      case 'status':
+        handleStatus(msg.status);
+        break;
+      case 'transcription':
+        addMessage('user', msg.text);
+        break;
+      case 'response':
+        addMessage('assistant', msg.text);
+        break;
+      case 'alignment':
+        pendingAlignment = msg.alignment;
+        break;
+      case 'error':
+      case 'tts_error':
+        addMessage('error', msg.message);
+        handleStatus('idle');
         break;
     }
+  };
+}
+
+function send(data) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(data);
+  }
+}
+
+// --- Status ---
+
+function setStatus(state, text) {
+  statusIcon.className = state;
+  statusText.textContent = text;
+}
+
+function handleStatus(status) {
+  switch (status) {
+    case 'transcribing':
+      setStatus('transcribing', 'Transcribing speech...');
+      GladosOrb.setState('thinking');
+      break;
+    case 'thinking':
+      setStatus('thinking', 'GLaDOS is thinking...');
+      GladosOrb.setState('thinking');
+      break;
+    case 'speaking':
+      setStatus('speaking', 'GLaDOS is speaking...');
+      GladosOrb.setState('speaking');
+      break;
+    case 'idle':
+      setStatus('connected', 'Ready — Awaiting input');
+      GladosOrb.setState('idle');
+      GladosOrb.setAmplitude(0);
+      break;
+  }
+}
+
+// --- Audio handling ---
+
+async function handleAudio(arrayBuffer) {
+  GladosOrb.setState('speaking');
+
+  // Start amplitude tracking for orb visualization
+  startAmplitudeTracking();
+
+  try {
+    await AudioManager.playAudio(arrayBuffer);
+  } catch (err) {
+    console.error('Audio playback failed:', err);
+    addMessage('error', 'Audio playback failed');
   }
 
-  // --- Audio handling ---
+  stopAmplitudeTracking();
+  GladosOrb.setState('idle');
+  GladosOrb.setAmplitude(0);
+}
 
-  async function handleAudio(arrayBuffer) {
-    GladosOrb.setState('speaking');
+function startAmplitudeTracking() {
+  function track() {
+    const amp = AudioManager.getAmplitude();
+    GladosOrb.setAmplitude(amp);
+    animFrameId = requestAnimationFrame(track);
+  }
+  track();
+}
 
-    // Start amplitude tracking for orb visualization
+function stopAmplitudeTracking() {
+  if (animFrameId) {
+    cancelAnimationFrame(animFrameId);
+    animFrameId = null;
+  }
+}
+
+// --- Recording (push-to-talk) ---
+
+let recording = false;
+
+btnMic.addEventListener('mousedown', startRecording);
+btnMic.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
+document.addEventListener('mouseup', stopRecordingIfActive);
+document.addEventListener('touchend', stopRecordingIfActive);
+
+async function startRecording() {
+  if (!connected || recording) return;
+
+  AudioManager.init();
+  try {
+    await AudioManager.startRecording();
+    recording = true;
+    btnMic.classList.add('recording');
+    GladosOrb.setState('recording');
+
+    // Track mic amplitude
     startAmplitudeTracking();
-
-    try {
-      await AudioManager.playAudio(arrayBuffer);
-    } catch (err) {
-      console.error('Audio playback failed:', err);
-      addMessage('error', 'Audio playback failed');
-    }
-
-    stopAmplitudeTracking();
-    GladosOrb.setState('idle');
-    GladosOrb.setAmplitude(0);
+  } catch (err) {
+    console.error('Could not start recording:', err);
+    addMessage('error', 'Microphone access denied');
   }
+}
 
-  function startAmplitudeTracking() {
-    function track() {
-      const amp = AudioManager.getAmplitude();
-      GladosOrb.setAmplitude(amp);
-      animFrameId = requestAnimationFrame(track);
-    }
-    track();
+async function stopRecordingIfActive() {
+  if (!recording) return;
+  recording = false;
+  btnMic.classList.remove('recording');
+  stopAmplitudeTracking();
+  GladosOrb.setState('idle');
+  GladosOrb.setAmplitude(0);
+
+  const blob = await AudioManager.stopRecording();
+  if (blob && blob.size > 0) {
+    const buffer = await blob.arrayBuffer();
+    send(buffer);
   }
+}
 
-  function stopAmplitudeTracking() {
-    if (animFrameId) {
-      cancelAnimationFrame(animFrameId);
-      animFrameId = null;
-    }
+// --- Text input ---
+
+textInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendText();
   }
+});
 
-  // --- Recording (push-to-talk) ---
+btnSend.addEventListener('click', sendText);
 
-  let recording = false;
+function sendText() {
+  const text = textInput.value.trim();
+  if (!text || !connected) return;
 
-  btnMic.addEventListener('mousedown', startRecording);
-  btnMic.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
-  document.addEventListener('mouseup', stopRecordingIfActive);
-  document.addEventListener('touchend', stopRecordingIfActive);
+  addMessage('user', text);
+  send(JSON.stringify({ type: 'text', text }));
+  textInput.value = '';
+}
 
-  async function startRecording() {
-    if (!connected || recording) return;
+// --- Transcript ---
 
-    AudioManager.init();
-    try {
-      await AudioManager.startRecording();
-      recording = true;
-      btnMic.classList.add('recording');
-      GladosOrb.setState('recording');
+function addMessage(role, text) {
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.textContent = text;
+  transcriptMessages.appendChild(div);
+  transcriptMessages.scrollTop = transcriptMessages.scrollHeight;
 
-      // Track mic amplitude
-      startAmplitudeTracking();
-    } catch (err) {
-      console.error('Could not start recording:', err);
-      addMessage('error', 'Microphone access denied');
-    }
+  // Keep last 50 messages visible
+  while (transcriptMessages.children.length > 50) {
+    transcriptMessages.removeChild(transcriptMessages.firstChild);
   }
-
-  async function stopRecordingIfActive() {
-    if (!recording) return;
-    recording = false;
-    btnMic.classList.remove('recording');
-    stopAmplitudeTracking();
-    GladosOrb.setState('idle');
-    GladosOrb.setAmplitude(0);
-
-    const blob = await AudioManager.stopRecording();
-    if (blob && blob.size > 0) {
-      const buffer = await blob.arrayBuffer();
-      send(buffer);
-    }
-  }
-
-  // --- Text input ---
-
-  textInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendText();
-    }
-  });
-
-  btnSend.addEventListener('click', sendText);
-
-  function sendText() {
-    const text = textInput.value.trim();
-    if (!text || !connected) return;
-
-    addMessage('user', text);
-    send(JSON.stringify({ type: 'text', text }));
-    textInput.value = '';
-  }
-
-  // --- Transcript ---
-
-  function addMessage(role, text) {
-    const div = document.createElement('div');
-    div.className = `msg ${role}`;
-    div.textContent = text;
-    transcriptMessages.appendChild(div);
-    transcriptMessages.scrollTop = transcriptMessages.scrollHeight;
-
-    // Keep last 50 messages visible
-    while (transcriptMessages.children.length > 50) {
-      transcriptMessages.removeChild(transcriptMessages.firstChild);
-    }
-  }
-})();
+}
