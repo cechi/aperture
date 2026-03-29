@@ -32,8 +32,8 @@ function init(containerEl) {
   scene.background = new THREE.Color(0x000000);
 
   camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 500);
-  camera.position.set(0, 75, 120);
-  camera.lookAt(0, 70, 0);
+  camera.position.set(0, 60, 220);
+  camera.lookAt(0, 65, 0);
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -73,6 +73,15 @@ function init(containerEl) {
     model.traverse((child) => {
       if (child.isBone && child.name === 'chin') {
         chinBone = child;
+        // Store rest quaternion to animate from
+        // Bind pose = open mouth; derive closed by rotating chin upward
+        chinBone.userData.openQuaternion = chinBone.quaternion.clone();
+        const closeOffset = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.45, 0, 0));
+        chinBone.userData.closedQuaternion = chinBone.quaternion.clone().multiply(closeOffset);
+        // Start closed immediately
+        chinBone.quaternion.copy(chinBone.userData.closedQuaternion);
+        console.log('chin open Q:', chinBone.userData.openQuaternion.toArray());
+        console.log('chin closed Q:', chinBone.userData.closedQuaternion.toArray());
       }
     });
 
@@ -175,17 +184,19 @@ function animate() {
       intensity = 0.4;
   }
 
-  // Rotate model
+  // Subtle idle wobble (no continuous rotation)
   if (model) {
-    model.rotation.y += dt * rotationSpeed;
+    model.rotation.y = Math.sin(elapsed * 0.3) * 0.15;
   }
 
-  // Jaw animation (chin bone)
-  if (chinBone && state === 'speaking') {
-    chinBone.rotation.x = currentAmplitude * 0.3;
-  } else if (chinBone) {
-    // Ease back to closed
-    chinBone.rotation.x *= 0.9;
+  // Jaw animation (chin bone) using quaternion slerp from rest pose
+  if (chinBone && chinBone.userData.closedQuaternion) {
+    if (state === 'speaking' && currentAmplitude > 0.05) {
+      chinBone.quaternion.copy(chinBone.userData.closedQuaternion)
+        .slerp(chinBone.userData.openQuaternion, currentAmplitude * 0.8);
+    } else {
+      chinBone.quaternion.slerp(chinBone.userData.closedQuaternion, 0.2);
+    }
   }
 
   // Apply color and intensity to materials
