@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aperture Science — Access Portal</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --aperture-blue: #5cb8ff;
+      --aperture-orange: #ff8c00;
+      --aperture-dark: #0a0a0f;
+      --aperture-grid: #1a1a2e;
+      --text-primary: #d0d8e8;
+      --text-dim: #6a7a8a;
+    }
+
+    body {
+      background: var(--aperture-dark);
+      color: var(--text-primary);
+      font-family: 'Courier New', 'Consolas', monospace;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .login-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+    }
+
+    /* Aperture Science logo — geometric circle with cross */
+    .logo svg {
+      width: 96px;
+      height: 96px;
+      opacity: 0.8;
+    }
+
+    .logo svg .ring {
+      fill: none;
+      stroke: var(--aperture-blue);
+      stroke-width: 2;
+    }
+
+    .logo svg .shutter {
+      fill: none;
+      stroke: var(--aperture-blue);
+      stroke-width: 1.5;
+      stroke-linecap: round;
+    }
+
+    .logo svg .center-dot {
+      fill: var(--aperture-orange);
+    }
+
+    .title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      color: var(--text-dim);
+    }
+
+    .form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 320px;
+    }
+
+    .input-wrapper {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      border: 1px solid rgba(92, 184, 255, 0.2);
+      border-radius: 28px;
+      background: rgba(10, 10, 15, 0.8);
+      padding: 4px 4px 4px 20px;
+      transition: border-color 0.2s;
+    }
+
+    .input-wrapper:focus-within {
+      border-color: var(--aperture-blue);
+    }
+
+    .input-wrapper input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      padding: 10px 0;
+    }
+
+    .input-wrapper input::placeholder {
+      color: var(--text-dim);
+    }
+
+    .btn-access {
+      width: 100%;
+      padding: 14px;
+      border-radius: 28px;
+      border: 1px solid rgba(92, 184, 255, 0.3);
+      background: rgba(92, 184, 255, 0.08);
+      color: var(--aperture-blue);
+      font-family: inherit;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-access:hover {
+      background: rgba(92, 184, 255, 0.18);
+      border-color: var(--aperture-blue);
+    }
+
+    .error-msg {
+      color: #ff4444;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      min-height: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle class="ring" cx="50" cy="50" r="42"/>
+        <circle class="ring" cx="50" cy="50" r="28"/>
+        <!-- Aperture shutter blades -->
+        <line class="shutter" x1="50" y1="8" x2="35" y2="35"/>
+        <line class="shutter" x1="86" y1="29" x2="60" y2="30"/>
+        <line class="shutter" x1="86" y1="71" x2="65" y2="55"/>
+        <line class="shutter" x1="50" y1="92" x2="65" y2="65"/>
+        <line class="shutter" x1="14" y1="71" x2="40" y2="70"/>
+        <line class="shutter" x1="14" y1="29" x2="35" y2="45"/>
+        <circle class="center-dot" cx="50" cy="50" r="3"/>
+      </svg>
+    </div>
+
+    <div class="title">Aperture Science Enrichment Center</div>
+
+    <form class="form" id="login-form">
+      <div class="input-wrapper">
+        <input type="password" id="token-input" placeholder="Enter access token" autocomplete="off" autofocus>
+      </div>
+      <button type="submit" class="btn-access">Access</button>
+      <div class="error-msg" id="error-msg"></div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('login-form');
+    const input = document.getElementById('token-input');
+    const errorMsg = document.getElementById('error-msg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.textContent = '';
+
+      const token = input.value.trim();
+      if (!token) return;
+
+      try {
+        const res = await fetch('/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+
+        if (res.ok) {
+          sessionStorage.setItem('aperture_token', token);
+          window.location.href = '/';
+        } else {
+          errorMsg.textContent = 'Access denied.';
+          input.value = '';
+          input.focus();
+        }
+      } catch {
+        errorMsg.textContent = 'Connection error.';
+      }
+    });
+  </script>
+</body>
+</html>
