@@ -25,6 +25,7 @@ let targetColor = new THREE.Color().copy(COLOR_IDLE);
 let meshMaterials = [];
 let wireframeMaterials = [];
 
+
 function init(containerEl) {
   container = containerEl;
   clock = new THREE.Clock();
@@ -111,8 +112,6 @@ function init(containerEl) {
         chinBone.userData.closedQuaternion = chinBone.quaternion.clone().multiply(closeOffset);
         // Start closed immediately
         chinBone.quaternion.copy(chinBone.userData.closedQuaternion);
-        console.log('chin open Q:', chinBone.userData.openQuaternion.toArray());
-        console.log('chin closed Q:', chinBone.userData.closedQuaternion.toArray());
       }
     });
 
@@ -235,8 +234,8 @@ function animate() {
   }
 
   // Apply color and intensity to materials
-  const displayColor = currentColor.clone().multiplyScalar(intensity);
-  const emissiveColor = currentColor.clone().multiplyScalar(intensity * 0.4);
+  const displayColor = currentColor.clone().multiplyScalar(intensity * 0.4);
+  const emissiveColor = currentColor.clone().multiplyScalar(intensity * 0.15);
   for (const mat of meshMaterials) {
     mat.color.copy(displayColor);
     mat.emissive.copy(emissiveColor);
