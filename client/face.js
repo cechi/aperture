@@ -79,7 +79,7 @@ function init(containerEl) {
         // Store rest quaternion to animate from
         // Bind pose = open mouth; derive closed by rotating chin upward
         chinBone.userData.openQuaternion = chinBone.quaternion.clone();
-        const closeOffset = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.22, 0, 0));
+        const closeOffset = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.08, 0, 0));
         chinBone.userData.closedQuaternion = chinBone.quaternion.clone().multiply(closeOffset);
         // Start closed immediately
         chinBone.quaternion.copy(chinBone.userData.closedQuaternion);
