@@ -82,6 +82,7 @@ async function chatCompletion(messages) {
       messages,
       max_tokens: 512,
       temperature: 0.8,
+      model: 'openrouter/x-ai/grok-4.1-fast',
     }),
   });
 
@@ -91,7 +92,8 @@ async function chatCompletion(messages) {
   }
 
   const data = await res.json();
-  return data.choices?.[0]?.message?.content || 'I seem to have encountered an error. How disappointing.';
+  const content = data.choices?.[0]?.message?.content;
+  return content || 'I seem to have encountered an error. How disappointing.';
 }
 
 module.exports = { handleMessage };
