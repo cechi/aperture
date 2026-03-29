@@ -1,6 +1,6 @@
 /**
- * GLaDOS Face — Three.js wireframe 3D face loaded from GLTF.
- * Matrix-inspired green wireframe with bone-driven jaw animation.
+ * GLaDOS Face — Three.js 3D face loaded from GLTF.
+ * Matrix-inspired green solid polygons with bone-driven jaw animation.
  */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -57,12 +57,15 @@ function init(containerEl) {
   loader.load('assets/face.gltf', (gltf) => {
     model = gltf.scene;
 
-    // Apply wireframe material to all meshes
+    // Apply solid material with glow to all meshes
     model.traverse((child) => {
       if (child.isMesh) {
-        const mat = new THREE.MeshBasicMaterial({
+        const mat = new THREE.MeshPhongMaterial({
           color: COLOR_IDLE.clone(),
-          wireframe: true,
+          emissive: new THREE.Color(0x003300),
+          shininess: 100,
+          transparent: true,
+          opacity: 0.9,
         });
         child.material = mat;
         meshMaterials.push(mat);
@@ -193,7 +196,7 @@ function animate() {
   if (chinBone && chinBone.userData.closedQuaternion) {
     if (state === 'speaking' && currentAmplitude > 0.05) {
       chinBone.quaternion.copy(chinBone.userData.closedQuaternion)
-        .slerp(chinBone.userData.openQuaternion, currentAmplitude * 0.8);
+        .slerp(chinBone.userData.openQuaternion, currentAmplitude);
     } else {
       chinBone.quaternion.slerp(chinBone.userData.closedQuaternion, 0.2);
     }
@@ -201,8 +204,10 @@ function animate() {
 
   // Apply color and intensity to materials
   const displayColor = currentColor.clone().multiplyScalar(intensity);
+  const emissiveColor = currentColor.clone().multiplyScalar(intensity * 0.4);
   for (const mat of meshMaterials) {
     mat.color.copy(displayColor);
+    mat.emissive.copy(emissiveColor);
   }
 
   // Point light reacts to state
