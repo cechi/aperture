@@ -196,7 +196,7 @@ function animate() {
   if (chinBone && chinBone.userData.closedQuaternion) {
     if (state === 'speaking' && currentAmplitude > 0.05) {
       chinBone.quaternion.copy(chinBone.userData.closedQuaternion)
-        .slerp(chinBone.userData.openQuaternion, currentAmplitude);
+        .slerp(chinBone.userData.openQuaternion, Math.min(1, currentAmplitude * 1.3));
     } else {
       chinBone.quaternion.slerp(chinBone.userData.closedQuaternion, 0.2);
     }
