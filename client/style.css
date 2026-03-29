@@ -247,3 +247,88 @@ body {
   background: rgba(92, 184, 255, 0.2);
   border-radius: 2px;
 }
+
+/* ── Mobile-first responsive ─────────────────────── */
+@media (max-width: 768px) {
+  body {
+    height: 100dvh;          /* dynamic viewport height — respects mobile browser chrome */
+  }
+
+  #ui-overlay {
+    justify-content: flex-end; /* stack content toward bottom */
+  }
+
+  /* Orb: let it stay absolute but shrink visually via container */
+  #orb-container {
+    position: absolute;
+    inset: 0;
+    bottom: 50%;             /* only occupy top half so orb centers higher */
+  }
+
+  /* Status bar: compact on mobile */
+  #status-bar {
+    padding: 10px 16px;
+    font-size: 11px;
+  }
+
+  /* Transcript: fill space above controls, don't overflow under them */
+  #transcript {
+    flex: 1;
+    max-height: none;        /* remove desktop 40vh cap */
+    padding: 0 16px 8px;
+    min-height: 0;           /* allow flex shrink */
+  }
+
+  .msg {
+    max-width: 85vw;
+    font-size: 14px;
+  }
+
+  /* Controls: fixed to bottom with safe-area padding */
+  #controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    background: rgba(10, 10, 15, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(92, 184, 255, 0.1);
+  }
+
+  /* Reserve space in flex layout so transcript doesn't hide behind fixed controls */
+  #ui-overlay::after {
+    content: '';
+    display: block;
+    /* height matches controls: button 56px + 12px top pad + 12px bottom pad + safe area */
+    height: calc(80px + env(safe-area-inset-bottom, 0px));
+    flex-shrink: 0;
+    pointer-events: none;
+  }
+
+  /* Touch-friendly hit areas (min 44x44) */
+  #btn-mic {
+    width: 52px;
+    height: 52px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  #btn-send {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  #text-input {
+    font-size: 16px;         /* ≥16px prevents iOS zoom on focus */
+  }
+
+  #text-input-wrapper {
+    padding: 4px 4px 4px 16px;
+  }
+}
